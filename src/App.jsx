@@ -5,13 +5,14 @@ const App = () => {
   const [treeData, setTreeData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Convert backend flat data to D3 tidy tree format
+  // Tranform the json data compatible with tree structure
  const transformToTree = (ministries) => ({
   name: "Government",
   children: ministries.map((m) => ({
     name: m.name,
     children: (m.Departments || []).map((d) => ({
-      name: d.name
+      name: d.name,
+      google_map_script: d.google_map_script
     }))
   }))
 });

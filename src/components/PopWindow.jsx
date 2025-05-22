@@ -30,8 +30,10 @@ const DepartmentPopover = ({ anchorEl, isOpen, onClose, entity }) => {
         {entity?.title || "No title"}
       </Typography>
       <Typography>
-        Last Updated: {entity?.updated_at || "N/A"}
+        Map: 
       </Typography>
+      <iframe src ={entity?.map || "NA"}> </iframe>
+     
     </Popover>
   );
 };

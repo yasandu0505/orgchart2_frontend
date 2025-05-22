@@ -118,17 +118,17 @@ const TidyTree = ({ data }) => {
             update(event, d)
 
           }
-             if (d.depth === 2) {
-              setAnchorElement(event.currentTarget);
-              setIsOpen(true);
-              setLoadedEntity({
-                title: d.data.name,
-                updated_at: d.data.updated_at || 'N/A',
-              });
-            } else {
-              setIsOpen(false);
-              setAnchorElement(null);
-            }
+          if (d.depth === 2) {
+            setAnchorElement(event.currentTarget);
+            setIsOpen(true);
+            setLoadedEntity({
+              title: d.data.name,
+              map: d.data.google_map_script,
+            });
+          } else {
+            setIsOpen(false);
+            setAnchorElement(null);
+          }
           // Set a flag for ministers to shift position when expanded
           if (d.depth === 1) {
             if (isExpanding) {
@@ -250,17 +250,17 @@ const TidyTree = ({ data }) => {
   }, [data, width]); // Re-run the effect when windowWidth changes
 
   return <>
-  <div ref={containerRef}></div>
+    <div ref={containerRef}></div>
     <PopWindow
-  anchorEl={anchorElement}
-  isOpen={isOpen}
-  onClose={() => {
-    setIsOpen(false);
-    setAnchorElement(null);
-  }}
-  entity={loadedEntity}
-/>
-    </> // Render a div instead of returning SVG
+      anchorEl={anchorElement}
+      isOpen={isOpen}
+      onClose={() => {
+        setIsOpen(false);
+        setAnchorElement(null);
+      }}
+      entity={loadedEntity}
+    />
+  </>
 
 
 };
