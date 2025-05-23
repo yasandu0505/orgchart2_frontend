@@ -1,10 +1,15 @@
 import React, { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import "./TidyTree.css";
+import PopWindow from "./PopWindow";
 
 const TidyTree = ({ data }) => {
   const containerRef = useRef(null);
   const [width, setWidth] = useState(window.innerWidth);
+  const [anchorElement, setAnchorElement] = useState(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const [loadedEntity, setLoadedEntity] = useState(null);
+
   let ministersExpanded = false;
 
   useEffect(() => {
@@ -100,19 +105,38 @@ const TidyTree = ({ data }) => {
         // })
         .on("click", (event, d) => {
           const isExpanding = !d.children; // Check if the node is expanding
-        
+
           d.children = isExpanding ? d._children : null;
           update(event, d);
-        
+
           // Apply or remove highlight
           d3.selectAll(".nodes circle,.nodes text").classed("highlight", false); // Remove highlight from all
           //d3.selectAll(".link").classed("highlight", false);
-        
+
           if (isExpanding) {
             highlightNodes(d);
-            update(event, d);
-          }
+            update(event, d)
 
+          }
+          if (d.depth === 2) {
+            setAnchorElement({
+              getBoundingClientRect: () => ({
+                top: event.clientY,
+                left: event.clientX + 20,
+                bottom: event.clientY + 1,
+                right: event.clientX + 21,
+              }),
+            });
+
+            setIsOpen(true);
+            setLoadedEntity({
+              title: d.data.name,
+              map: d.data.google_map_script,
+            });
+          } else {
+            setIsOpen(false);
+            setAnchorElement(null);
+          }
           // Set a flag for ministers to shift position when expanded
           if (d.depth === 1) {
             if (isExpanding) {
@@ -124,7 +148,7 @@ const TidyTree = ({ data }) => {
             }
             update(event, d);
           }
-          
+
         });
 
       nodeEnter.append("circle")
@@ -136,7 +160,7 @@ const TidyTree = ({ data }) => {
         .attr("text-anchor", "start") // Always anchor the text to the start (right)
         .text((d) => d.data.name)
 
-        // Transition nodes to their new position.
+      // Transition nodes to their new position.
       node.merge(nodeEnter)
         .transition(transition)
         .attr("transform", (d) => {
@@ -153,7 +177,7 @@ const TidyTree = ({ data }) => {
         .attr("fill-opacity", 1)
         .attr("stroke-opacity", 1)
 
-        // Transition exiting nodes to the parent's new position.
+      // Transition exiting nodes to the parent's new position.
       node.exit()
         .transition(transition)
         .remove()
@@ -161,11 +185,11 @@ const TidyTree = ({ data }) => {
         .attr("fill-opacity", 0)
         .attr("stroke-opacity", 0);
 
-        // Update the links...
+      // Update the links...
       const link = gLink.selectAll("path")
         .data(links, (d) => d.target.id);
 
-        // Enter any new links at the parent's previous position.
+      // Enter any new links at the parent's previous position.
       const linkEnter = link.enter()
         .append("path")
         .attr("d", (d) => {
@@ -173,7 +197,7 @@ const TidyTree = ({ data }) => {
           return diagonal({ source: o, target: o });
         });
 
-        // Transition links to their new position.
+      // Transition links to their new position.
       link.merge(linkEnter)
         .transition(transition)
         //.attr("d", diagonal);
@@ -181,10 +205,10 @@ const TidyTree = ({ data }) => {
           // Adjust the link paths for the second layer nodes (minister nodes)
           // const adjustedSourceY = d.source.depth === 1 ? width / 2 : d.source.y;
           // const adjustedTargetY = d.target.depth === 1 ? width / 2 : d.target.y;
-    
+
           // const sourcePosition = { x: d.source.x, y: adjustedSourceY };
           // const targetPosition = { x: d.target.x, y: adjustedTargetY };
-    
+
           // return diagonal({ source: sourcePosition, target: targetPosition });
           const adjustedSourceY = d.source.depth === 1 ? (ministersExpanded ? width / 4 : width / 2) : d.source.y;
           const adjustedTargetY = d.target.depth === 1 ? (ministersExpanded ? width / 4 : width / 2) : d.target.y;
@@ -192,7 +216,7 @@ const TidyTree = ({ data }) => {
           return diagonal({ source: { x: d.source.x, y: adjustedSourceY }, target: { x: d.target.x, y: adjustedTargetY } });
         });
 
-        // Transition existing nodes to the parent's new position.
+      // Transition existing nodes to the parent's new position.
       link.exit()
         .transition(transition)
         .remove()
@@ -201,7 +225,7 @@ const TidyTree = ({ data }) => {
           return diagonal({ source: o, target: o });
         });
 
-        // Stash the old positions for transition.
+      // Stash the old positions for transition.
       root.eachBefore((d) => {
         d.x0 = d.x;
         d.y0 = d.y;
@@ -211,9 +235,9 @@ const TidyTree = ({ data }) => {
     function highlightNodes(node) {
       // Highlight the clicked node
       d3.select(`[data-id='${node.id}']`)
-      .selectAll("circle, text") // Target the circle inside the node
-      .classed("highlight", true);
-    
+        .selectAll("circle, text") // Target the circle inside the node
+        .classed("highlight", true);
+
       // Highlight all children recursively
       if (node.children) {
         node.children.forEach((child) => highlightNodes(child));
@@ -233,7 +257,20 @@ const TidyTree = ({ data }) => {
     update(null, root);
   }, [data, width]); // Re-run the effect when windowWidth changes
 
-  return <div ref={containerRef}></div>; // Render a div instead of returning SVG
+  return <>
+    <div ref={containerRef}></div>
+    <PopWindow
+      anchorEl={anchorElement}
+      isOpen={isOpen}
+      onClose={() => {
+        setIsOpen(false);
+        setAnchorElement(null);
+      }}
+      entity={loadedEntity}
+    />
+  </>
+
+
 };
 
 export default TidyTree;
