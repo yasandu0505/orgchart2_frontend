@@ -119,7 +119,15 @@ const TidyTree = ({ data }) => {
 
           }
           if (d.depth === 2) {
-            setAnchorElement(event.currentTarget);
+            setAnchorElement({
+              getBoundingClientRect: () => ({
+                top: event.clientY,
+                left: event.clientX + 20,
+                bottom: event.clientY + 1,
+                right: event.clientX + 21,
+              }),
+            });
+
             setIsOpen(true);
             setLoadedEntity({
               title: d.data.name,
